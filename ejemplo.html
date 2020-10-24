@@ -1,0 +1,138 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {
+                font-family: sans-serif;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="resultado"></div>
+        <button type="button" onclick="comenzar()">Comenzar</button>
+
+        <script src="pila.js"></script>
+        <script>
+            /** Objeto de ejemplo */
+            var objeto=function(nombre,hijos) {
+                if(typeof hijos==="undefined") hijos=[];
+                this.nombre=nombre;
+                this.hijos=hijos;
+                this.ruta=null;
+
+                this.obtenerNombre=function() {
+                    return this.nombre;
+                };
+
+                this.obtenerHijos=function() {
+                    return this.hijos;
+                };
+            };
+
+            /** Listado de ejemplo */
+            var listado=[
+                new objeto("uno",[
+                    new objeto("dos",[
+                        new objeto("tres"),
+                        new objeto("cuatro"),
+                        new objeto("cinco",[
+                            new objeto("seis")
+                        ])
+                    ]),
+                    new objeto("siete",[
+                        new objeto("ocho"),
+                        new objeto("nueve")
+                    ])
+                ]),
+                new objeto("diez",[
+                    new objeto("once",[
+                        new objeto("doce"),
+                        new objeto("trece"),
+                        new objeto("catorce")
+                    ])
+                ])
+            ];
+
+            function comenzar() {
+                var resultado="<h1>Recorrer todos los elementos</h1><ul>";
+                new pila({
+                    //Listado a recorrer
+                    origen:listado,
+                    //Propiedad que contiene la descendencia
+                    hijos:"hijos",
+                    //Función de retorno para todos los elementos
+                    retorno:function(obj,indice,pila) {
+                        resultado+="<li>"+obj.nombre;
+                        if(obj.hijos.length) resultado+="<ul>";
+
+                        //Devolviendo false, se detendrá la ejecución
+                        //return false;
+                    },
+                    //Función de retorno al finalizar cada nivel
+                    cierre:function(padre,pila) {
+                        resultado+="</ul>";
+                    }
+                }).ejecutar();
+                resultado+="</ul>";
+
+                resultado+="<h1>Filtrar elementos por nombres pares</h1><ul>";
+                new pila({
+                    origen:listado,
+                    //También es posible usar una función que devuelva el nombre que identifica al elemento
+                    nombre:"obtenerNombre",
+                    //También es posible usar una función que devuelva la descendencia
+                    hijos:"obtenerHijos",
+                    //Filtro por nombre
+                    filtro:/^(dos|cuatro|seis|ocho|diez|doce|catorce)$/,                    
+                    //Función de retorno para los elementos que coincidan
+                    retorno:function(obj,indice,pila) {
+                        resultado+="<li>"+obj.nombre;
+                    }
+                }).ejecutar();
+                resultado+="</ul>";
+
+                resultado+="<h1>Buscar elementos por nombre (<code>uno.dos.cinco</code>)</h1><ul>";
+                new pila({
+                    origen:listado,
+                    nombre:"nombre",
+                    hijos:"hijos",
+                    //Propiedad para almacenar la ruta
+                    asignarRuta:"ruta",
+                    //Buscar un elemento dada su ruta por nombre
+                    ruta:"uno.dos.cinco",
+                    retorno:function(obj,indice,pila) {
+                        resultado+="<li>"+obj.nombre;
+                    }
+                }).ejecutar();
+                resultado+="</ul>";
+
+                resultado+="<h1>Rutas (asignadas a la propiedad <code>ruta</code> de cada objeto)</h1><ul>";
+                new pila({
+                    //Listado a recorrer
+                    origen:listado,
+                    //Propiedad o función que contenga o devuelva la descendencia
+                    hijos:"hijos",
+                    //Función de retorno
+                    retorno:function(obj,indice,pila) {
+                        resultado+="<li>"+obj.ruta;
+                    }
+                }).ejecutar();
+                resultado+="</ul>";
+
+                resultado+="<h1>Método útil para acceder a una propiedad anidada dada su ruta separada por puntos</h1><ul>";
+                var valor=new pila({
+                    origen:{
+                        uno:{
+                            dos:{
+                                tres:"Cuatro"
+                            }
+                        }
+                    }
+                }).obtener("uno.dos.tres");
+                resultado+="<li>"+valor+"</ul>";
+
+                document.querySelector("#resultado").innerHTML=resultado;
+            }
+        </script>
+    </body>
+</html>
